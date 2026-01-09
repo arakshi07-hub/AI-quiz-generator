@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Educational Quiz Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    * {
+      font-family: 'Poppins', sans-serif;
+    }
+    .edu-bg {
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .edu-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.08) 0%, transparent 50%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M20 20h10v10H20zM50 20h10v10H50zM20 50h10v10H20zM50 50h10v10H50z'/%3E%3Ccircle cx='40' cy='40' r='3'/%3E%3Cpath d='M40 10L45 20H35L40 10zM10 40L15 50H5L10 40zM70 40L75 50H65L70 40zM40 70L45 80H35L40 70z'/%3E%3C/g%3E%3C/svg%3E");
+      animation: bgMove 60s linear infinite;
+    }
+    @keyframes bgMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 80px 80px; }
+    }
+    .message-box {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2);
+      animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .subject-card {
+      animation: fadeIn 0.5s ease-out forwards;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .subject-card:nth-child(1) { animation-delay: 0.15s; }
+    .subject-card:nth-child(2) { animation-delay: 0.3s; }
+    .subject-card:nth-child(3) { animation-delay: 0.45s; }
+    .subject-card:hover {
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    .subject-card:active {
+      transform: translateY(-4px) scale(1.01);
+    }
+    .progress-bar {
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .option-btn {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .option-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    .option-btn:hover:not(:disabled)::before {
+      left: 100%;
+    }
+    .option-btn:hover:not(:disabled) {
+      transform: translateX(10px);
+      border-color: #3b82f6;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
+    }
+    .option-btn.correct {
+      background: linear-gradient(135deg, #10b981, #34d399) !important;
+      color: white !important;
+      border-color: #10b981 !important;
+      animation: correctPulse 0.5s ease-out;
+    }
+    .option-btn.incorrect {
+      background: linear-gradient(135deg, #ef4444, #f87171) !important;
+      color: white !important;
+      border-color: #ef4444 !important;
+      animation: shake 0.5s ease-out;
+    }
+    @keyframes correctPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+    .confetti {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      animation: confetti-fall 3s ease-out forwards;
+    }
+    @keyframes confetti-fall {
+      0% { 
+        transform: translateY(-100px) rotate(0deg); 
+        opacity: 1; 
+      }
+      100% { 
+        transform: translateY(500px) rotate(720deg); 
+        opacity: 0; 
+      }
+    }
+    .bounce {
+      animation: bounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.15); }
+      50% { transform: scale(0.95); }
+      75% { transform: scale(1.08); }
+    }
+    .icon-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-12px) rotate(-3deg); }
+      75% { transform: translateY(-8px) rotate(3deg); }
+    }
+    .pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .score-animation {
+      animation: scoreReveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes scoreReveal {
+      0% { 
+        transform: scale(0) rotate(-180deg); 
+        opacity: 0; 
+      }
+      100% { 
+        transform: scale(1) rotate(0deg); 
+        opacity: 1; 
+      }
+    }
+    .practice-item {
+      animation: slideInRight 0.5s ease-out forwards;
+      opacity: 0;
+    }
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full edu-bg">
+  <div id="app" class="h-full w-full flex items-center justify-center p-4 overflow-auto"><!-- Subject Selection Screen -->
+   <div id="subject-screen" class="message-box w-full max-w-md p-10 relative z-10">
+    <div class="text-center mb-10">
+     <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 mb-5 icon-float shadow-lg">
+      <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+     </div>
+     <h1 id="main-title" class="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">Choose Your Subject</h1>
+     <p class="text-gray-600 text-base">Select a topic to begin your learning journey</p>
+    </div>
+    <div id="subjects-container" class="space-y-5"><!-- IoT Card --> <button onclick="selectSubject('iot')" class="subject-card w-full p-5 rounded-2xl border-3 border-transparent bg-gradient-to-r from-blue-50 to-cyan-50 hover:border-blue-400 text-left group shadow-md">
+      <div class="flex items-center gap-4">
+       <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+        </svg>
+       </div>
+       <div class="flex-1">
+        <h3 class="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">Internet of Things</h3>
+        <p class="text-sm text-gray-600">Smart devices &amp; connectivity</p>
+       </div>
+       <svg class="w-6 h-6 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-2 transition-all" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+       </svg>
+      </div></button> <!-- Machine Learning Card --> <button onclick="selectSubject('ml')" class="subject-card w-full p-5 rounded-2xl border-3 border-transparent bg-gradient-to-r from-purple-50 to-pink-50 hover:border-purple-400 text-left group shadow-md">
+      <div class="flex items-center gap-4">
+       <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+       </div>
+       <div class="flex-1">
+        <h3 class="font-bold text-gray-900 text-lg group-hover:text-purple-600 transition-colors">Machine Learning</h3>
+        <p class="text-sm text-gray-600">AI &amp; intelligent systems</p>
+       </div>
+       <svg class="w-6 h-6 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-2 transition-all" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+       </svg>
+      </div></button> <!-- Cloud Computing Card --> <button onclick="selectSubject('cloud')" class="subject-card w-full p-5 rounded-2xl border-3 border-transparent bg-gradient-to-r from-emerald-50 to-teal-50 hover:border-emerald-400 text-left group shadow-md">
+      <div class="flex items-center gap-4">
+       <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+        </svg>
+       </div>
+       <div class="flex-1">
+        <h3 class="font-bold text-gray-900 text-lg group-hover:text-emerald-600 transition-colors">Cloud Computing</h3>
+        <p class="text-sm text-gray-600">Scalable infrastructure</p>
+       </div>
+       <svg class="w-6 h-6 text-gray-400 group-hover:text-emerald-600 group-hover:translate-x-2 transition-all" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+       </svg>
+      </div></button>
+    </div>
+    <div class="mt-8 text-center">
+     <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full">
+      <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewbox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /> <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+      </svg><span class="text-xs text-blue-700 font-medium">Each quiz is uniquely generated</span>
+     </div>
+    </div>
+   </div><!-- Quiz Screen -->
+   <div id="quiz-screen" class="message-box w-full max-w-2xl p-8 relative z-10 hidden">
+    <div class="flex items-center justify-between mb-8"><button onclick="goBack()" class="p-2 rounded-xl hover:bg-gray-100 transition-all hover:scale-110 active:scale-95">
+      <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+      </svg></button>
+     <div id="quiz-subject-badge" class="px-4 py-2 rounded-full text-sm font-bold shadow-md"></div>
+     <div id="quiz-type-badge" class="px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-semibold uppercase tracking-wide">
+      Quiz
+     </div>
+    </div>
+    <div class="mb-8">
+     <div class="flex justify-between text-sm font-semibold text-gray-700 mb-3"><span>Question <span id="current-q" class="text-blue-600">1</span> of <span id="total-q">5</span></span> <span id="score-display" class="text-emerald-600">Score: 0</span>
+     </div>
+     <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+      <div id="progress-bar" class="progress-bar h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full" style="width: 20%"></div>
+     </div>
+    </div>
+    <div id="question-container" class="mb-8">
+     <h2 id="question-text" class="text-xl font-bold text-gray-900 mb-6 leading-relaxed"></h2>
+     <div id="options-container" class="space-y-4"></div>
+    </div><button id="next-btn" onclick="nextQuestion()" class="w-full py-4 px-8 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 active:scale-100 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 hidden"> Next Question → </button>
+   </div><!-- Results Screen -->
+   <div id="results-screen" class="message-box w-full max-w-lg p-10 relative z-10 hidden overflow-hidden">
+    <div id="confetti-container" class="absolute inset-0 pointer-events-none z-0"></div>
+    <div class="relative z-10 text-center">
+     <div id="result-icon" class="inline-flex items-center justify-center w-24 h-24 rounded-full mb-5 bounce shadow-2xl"></div>
+     <h2 id="result-title" class="text-3xl font-extrabold text-gray-900 mb-3"></h2>
+     <p id="result-message" class="text-gray-600 text-lg mb-8"></p>
+     <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 mb-8 shadow-lg score-animation">
+      <div class="text-6xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2"><span id="final-score">0</span>/<span id="max-score">5</span>
+      </div>
+      <p class="text-gray-600 font-medium">Questions Correct</p>
+     </div>
+     <div id="wrong-answers-section" class="hidden mb-8">
+      <p class="text-sm text-gray-700 font-semibold mb-4">Topics needing practice:</p>
+      <div id="wrong-topics" class="flex flex-wrap gap-3 justify-center"></div>
+     </div>
+     <div id="result-actions" class="space-y-4"><button id="practice-btn" onclick="startPractice()" class="w-full py-4 px-8 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 active:scale-100 transition-all duration-300 hidden"> 📚 Start Practice Session </button> <button id="final-quiz-btn" onclick="startFinalQuiz()" class="w-full py-4 px-8 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 active:scale-100 transition-all duration-300 hidden"> 🎯 Take Final Quiz </button> <button onclick="resetQuiz()" class="w-full py-4 px-8 rounded-xl border-3 border-gray-300 text-gray-800 font-bold text-lg hover:bg-gray-100 hover:border-gray-400 transition-all duration-300 hover:scale-105 active:scale-100"> Choose Another Subject </button>
+     </div>
+    </div>
+   </div><!-- Practice Screen -->
+   <div id="practice-screen" class="message-box w-full max-w-2xl p-8 relative z-10 hidden">
+    <div class="text-center mb-8">
+     <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 mb-4 pulse shadow-lg">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+     </div>
+     <h2 class="text-2xl font-bold text-gray-900 mb-2">Practice Session</h2>
+     <p class="text-gray-600">Review your mistakes and learn the correct answers</p>
+    </div>
+    <div id="practice-content" class="space-y-5 mb-8"></div><button onclick="startFinalQuiz()" class="w-full py-4 px-8 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 active:scale-100 transition-all duration-300"> I'm Ready for Final Quiz! 🎯 </button>
+   </div><!-- Final Encouragement Screen -->
+   <div id="final-screen" class="message-box w-full max-w-lg p-10 relative z-10 hidden overflow-hidden">
+    <div id="final-confetti-container" class="absolute inset-0 pointer-events-none z-0"></div>
+    <div class="relative z-10 text-center">
+     <div class="text-7xl mb-5 bounce">
+      🌟
+     </div>
+     <h2 class="text-3xl font-extrabold text-gray-900 mb-3">Congratulations!</h2>
+     <p id="encouragement-message" class="text-gray-700 text-lg mb-8 font-medium">You're amazing! Keep learning and growing!</p>
+     <div class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-8 mb-8 shadow-xl score-animation">
+      <p class="text-sm text-gray-600 font-semibold mb-3 uppercase tracking-wide">Your Overall Score</p>
+      <div class="text-6xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3"><span id="total-final-score">0</span>%
+      </div>
+      <div class="flex justify-center gap-6 text-base text-gray-700 font-semibold"><span class="px-4 py-2 bg-white rounded-lg shadow">Initial Quiz: <strong id="quiz-score-final" class="text-blue-600">0</strong>/5</span> <span class="px-4 py-2 bg-white rounded-lg shadow">Final Quiz: <strong id="final-score-final" class="text-emerald-600">0</strong>/5</span>
+      </div>
+     </div>
+     <div class="bg-amber-100 border-2 border-amber-300 rounded-2xl p-6 mb-8 shadow-lg">
+      <p class="text-amber-900 font-bold text-lg mb-2">🏆 Achievement Unlocked!</p>
+      <p id="achievement-text" class="text-amber-800 font-medium"></p>
+     </div><button onclick="resetQuiz()" class="w-full py-4 px-8 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg shadow-xl hover:shadow-2xl hover:scale-105 active:scale-100 transition-all duration-300"> Start New Journey 🚀 </button>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Configuration
+    const defaultConfig = {
+      main_title: "Choose Your Subject",
+      encouragement_text: "You're amazing! Keep learning and growing!"
+    };
+
+    // Comprehensive Question Banks - 15+ questions per subject for uniqueness
+    const questionBanks = {
+      iot: [
+        { q: "What does IoT stand for?", options: ["Internet of Things", "Internet of Technology", "Internal Operation Transfer", "Intelligent Object Tracking"], correct: 0, topic: "Basics" },
+        { q: "Which protocol is commonly used for IoT communication?", options: ["MQTT", "FTP", "SMTP", "POP3"], correct: 0, topic: "Protocols" },
+        { q: "What is a sensor in IoT?", options: ["A device that detects changes in environment", "A type of database", "A programming language", "A cloud service"], correct: 0, topic: "Hardware" },
+        { q: "Which company developed the Arduino platform?", options: ["Arduino LLC", "Microsoft", "Google", "Apple"], correct: 0, topic: "Platforms" },
+        { q: "What is the purpose of an actuator in IoT?", options: ["To perform physical actions", "To store data", "To process algorithms", "To display information"], correct: 0, topic: "Hardware" },
+        { q: "What is edge computing in IoT?", options: ["Processing data near the source", "Cloud-based processing", "Central server processing", "Mobile processing"], correct: 0, topic: "Architecture" },
+        { q: "Which wireless technology is used for short-range IoT devices?", options: ["Bluetooth", "4G LTE", "Satellite", "Fiber optic"], correct: 0, topic: "Connectivity" },
+        { q: "What is a smart home an example of?", options: ["IoT application", "Database system", "Operating system", "Programming language"], correct: 0, topic: "Applications" },
+        { q: "What does RFID stand for?", options: ["Radio Frequency Identification", "Remote File Integration Device", "Rapid Form Input Data", "Random Frequency ID"], correct: 0, topic: "Technology" },
+        { q: "Which layer processes data in IoT architecture?", options: ["Processing layer", "Physical layer", "Display layer", "User layer"], correct: 0, topic: "Architecture" },
+        { q: "What is a digital twin in IoT?", options: ["Virtual replica of a physical object", "Clone of a sensor", "Backup server", "Duplicate network"], correct: 0, topic: "Concepts" },
+        { q: "What is a major security concern in IoT?", options: ["Device vulnerability", "Screen size", "Color accuracy", "Sound quality"], correct: 0, topic: "Security" },
+        { q: "What is LoRaWAN used for?", options: ["Long-range IoT communication", "Video streaming", "Gaming", "Social media"], correct: 0, topic: "Connectivity" },
+        { q: "What is a gateway in IoT?", options: ["Bridge between devices and cloud", "Storage device", "Display screen", "Power supply"], correct: 0, topic: "Architecture" },
+        { q: "What does M2M stand for?", options: ["Machine to Machine", "Man to Machine", "Memory to Memory", "Mobile to Mobile"], correct: 0, topic: "Communication" },
+        { q: "What is Zigbee used for in IoT?", options: ["Low-power wireless communication", "High-speed internet", "Video calls", "File storage"], correct: 0, topic: "Protocols" },
+        { q: "What is fog computing?", options: ["Computing between edge and cloud", "Cloud computing only", "Local computing only", "No computing"], correct: 0, topic: "Architecture" }
+      ],
+      ml: [
+        { q: "What is supervised learning?", options: ["Learning with labeled data", "Learning without data", "Learning without labels", "Random learning"], correct: 0, topic: "Basics" },
+        { q: "What is a neural network inspired by?", options: ["Human brain", "Computer chips", "Solar systems", "Ocean waves"], correct: 0, topic: "Neural Networks" },
+        { q: "What does CNN stand for in deep learning?", options: ["Convolutional Neural Network", "Computer Network Node", "Central Neural Nexus", "Computed Number Network"], correct: 0, topic: "Deep Learning" },
+        { q: "What is overfitting in machine learning?", options: ["Model memorizes training data", "Model is too simple", "Model runs too fast", "Model uses less memory"], correct: 0, topic: "Training" },
+        { q: "What is the purpose of training data?", options: ["To teach the model patterns", "To test the model", "To deploy the model", "To delete the model"], correct: 0, topic: "Data" },
+        { q: "What is reinforcement learning?", options: ["Learning through rewards and penalties", "Learning through labels", "Learning through copying", "Learning through deletion"], correct: 0, topic: "Types" },
+        { q: "What is a decision tree?", options: ["A flowchart-like structure for decisions", "A type of forest", "A database table", "A network cable"], correct: 0, topic: "Algorithms" },
+        { q: "What does NLP stand for?", options: ["Natural Language Processing", "Network Layer Protocol", "Numerical Logic Programming", "Node Link Processing"], correct: 0, topic: "Applications" },
+        { q: "What is gradient descent?", options: ["Optimization algorithm", "Data structure", "File format", "Network protocol"], correct: 0, topic: "Optimization" },
+        { q: "What is a feature in machine learning?", options: ["Input variable for prediction", "Output result", "Error message", "System crash"], correct: 0, topic: "Basics" },
+        { q: "What is clustering?", options: ["Grouping similar data points", "Deleting data", "Copying data", "Sorting alphabetically"], correct: 0, topic: "Unsupervised" },
+        { q: "What is validation data used for?", options: ["Tuning model parameters", "Training the model", "Deploying the model", "Deleting the model"], correct: 0, topic: "Training" },
+        { q: "What is transfer learning?", options: ["Using pre-trained models", "Moving files", "Copying databases", "Sharing passwords"], correct: 0, topic: "Techniques" },
+        { q: "What is a loss function?", options: ["Measures prediction error", "Counts iterations", "Stores data", "Displays results"], correct: 0, topic: "Training" },
+        { q: "What is batch size in training?", options: ["Number of samples per iteration", "Model accuracy", "Training time", "File size"], correct: 0, topic: "Training" },
+        { q: "What is a confusion matrix?", options: ["Table showing model performance", "Error message", "Data storage", "Network diagram"], correct: 0, topic: "Evaluation" },
+        { q: "What is regularization?", options: ["Preventing overfitting", "Making data regular", "Cleaning code", "Formatting text"], correct: 0, topic: "Training" }
+      ],
+      cloud: [
+        { q: "What does SaaS stand for?", options: ["Software as a Service", "Storage as a System", "Server as a Solution", "Security as a Standard"], correct: 0, topic: "Models" },
+        { q: "Which is a major cloud provider?", options: ["AWS", "USB", "PDF", "RAM"], correct: 0, topic: "Providers" },
+        { q: "What is cloud elasticity?", options: ["Automatic scaling of resources", "Physical flexibility", "Network speed", "Storage capacity"], correct: 0, topic: "Features" },
+        { q: "What does IaaS stand for?", options: ["Infrastructure as a Service", "Internet as a System", "Integration as a Solution", "Information as a Standard"], correct: 0, topic: "Models" },
+        { q: "What is a virtual machine?", options: ["Software-based computer", "Physical server", "Network cable", "Storage disk"], correct: 0, topic: "Virtualization" },
+        { q: "What is cloud migration?", options: ["Moving to cloud infrastructure", "Physical relocation", "Network upgrade", "Software deletion"], correct: 0, topic: "Operations" },
+        { q: "What does PaaS stand for?", options: ["Platform as a Service", "Protocol as a System", "Processing as a Solution", "Program as a Standard"], correct: 0, topic: "Models" },
+        { q: "What is multi-tenancy?", options: ["Multiple users sharing resources", "Single user only", "No users allowed", "Limited access"], correct: 0, topic: "Architecture" },
+        { q: "What is a container in cloud computing?", options: ["Lightweight virtualization unit", "Physical box", "Network switch", "Storage drive"], correct: 0, topic: "Containerization" },
+        { q: "What is serverless computing?", options: ["Running code without managing servers", "No computers used", "Offline computing", "Local processing"], correct: 0, topic: "Architecture" },
+        { q: "What is cloud storage used for?", options: ["Storing data remotely", "Physical storage only", "Deleting files", "Increasing processing speed"], correct: 0, topic: "Storage" },
+        { q: "What does CDN stand for?", options: ["Content Delivery Network", "Computer Data Node", "Central Database Network", "Cloud Data Number"], correct: 0, topic: "Networking" },
+        { q: "What is auto-scaling?", options: ["Automatic resource adjustment", "Manual configuration", "Fixed capacity", "No scaling"], correct: 0, topic: "Features" },
+        { q: "What is cloud security?", options: ["Protecting cloud resources", "Physical guards", "Paper shredding", "Building locks"], correct: 0, topic: "Security" },
+        { q: "What is hybrid cloud?", options: ["Mix of public and private cloud", "Only public cloud", "Only private cloud", "No cloud"], correct: 0, topic: "Models" },
+        { q: "What is a load balancer?", options: ["Distributes traffic across servers", "Measures weight", "Stores data", "Deletes files"], correct: 0, topic: "Infrastructure" },
+        { q: "What is disaster recovery in cloud?", options: ["Backup and restore plan", "Weather prediction", "Power supply", "Internet speed"], correct: 0, topic: "Operations" }
+      ]
+    };
+
+    // Application State
+    let currentSubject = null;
+    let currentQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let wrongAnswers = [];
+    let selectedAnswer = null;
+    let quizPhase = 'initial'; // initial, practice, final
+    let initialScore = 0;
+    let finalScore = 0;
+    let studentId = generateStudentId();
+
+    // Generate unique student ID for quiz randomization
+    function generateStudentId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    // Shuffle array using seed for consistent uniqueness per student
+    function shuffleWithSeed(array, seed) {
+      const shuffled = [...array];
+      let seedNum = 0;
+      for (let i = 0; i < seed.length; i++) {
+        seedNum += seed.charCodeAt(i);
+      }
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        seedNum = (seedNum * 9301 + 49297) % 233280;
+        const j = Math.floor((seedNum / 233280) * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    // Generate unique quiz for each student
+    function generateQuiz(subject, count = 5) {
+      const bank = questionBanks[subject];
+      const shuffled = shuffleWithSeed(bank, studentId + Date.now());
+      return shuffled.slice(0, count).map(q => {
+        const optionIndices = [0, 1, 2, 3];
+        const shuffledIndices = shuffleWithSeed(optionIndices, studentId + q.q);
+        const newCorrect = shuffledIndices.indexOf(q.correct);
+        return {
+          ...q,
+          options: shuffledIndices.map(i => q.options[i]),
+          correct: newCorrect
+        };
+      });
+    }
+
+    // Select subject and start quiz
+    function selectSubject(subject) {
+      currentSubject = subject;
+      quizPhase = 'initial';
+      studentId = generateStudentId();
+      currentQuestions = generateQuiz(subject);
+      currentQuestionIndex = 0;
+      score = 0;
+      wrongAnswers = [];
+      selectedAnswer = null;
+
+      document.getElementById('subject-screen').classList.add('hidden');
+      document.getElementById('quiz-screen').classList.remove('hidden');
+
+      updateQuizBadge();
+      displayQuestion();
+    }
+
+    // Update quiz subject badge
+    function updateQuizBadge() {
+      const badge = document.getElementById('quiz-subject-badge');
+      const typeBadge = document.getElementById('quiz-type-badge');
+      
+      const colors = {
+        iot: 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white',
+        ml: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
+        cloud: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white'
+      };
+      
+      const names = {
+        iot: 'IoT',
+        ml: 'Machine Learning',
+        cloud: 'Cloud Computing'
+      };
+
+      badge.className = `px-4 py-2 rounded-full text-sm font-bold shadow-md ${colors[currentSubject]}`;
+      badge.textContent = names[currentSubject];
+
+      const phaseText = {
+        initial: 'Quiz',
+        practice: 'Practice',
+        final: 'Final Quiz'
+      };
+      typeBadge.textContent = phaseText[quizPhase];
+    }
+
+    // Display current question
+    function displayQuestion() {
+      const question = currentQuestions[currentQuestionIndex];
+      document.getElementById('question-text').textContent = question.q;
+      document.getElementById('current-q').textContent = currentQuestionIndex + 1;
+      document.getElementById('total-q').textContent = currentQuestions.length;
+      document.getElementById('score-display').textContent = `Score: ${score}`;
+      document.getElementById('progress-bar').style.width = `${((currentQuestionIndex + 1) / currentQuestions.length) * 100}%`;
+      document.getElementById('next-btn').classList.add('hidden');
+      selectedAnswer = null;
+
+      const container = document.getElementById('options-container');
+      container.innerHTML = question.options.map((opt, i) => `
+        <button onclick="selectOption(${i})" class="option-btn w-full p-4 text-left rounded-xl border-2 border-gray-300 text-gray-800 font-semibold hover:border-blue-400 bg-white shadow-md">
+          <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700 text-sm font-bold mr-3">${String.fromCharCode(65 + i)}</span>
+          ${opt}
+        </button>
+      `).join('');
+    }
+
+    // Handle option selection
+    function selectOption(index) {
+      if (selectedAnswer !== null) return;
+      
+      selectedAnswer = index;
+      const question = currentQuestions[currentQuestionIndex];
+      const buttons = document.querySelectorAll('.option-btn');
+      
+      buttons.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === question.correct) {
+          btn.classList.add('correct');
+        } else if (i === index && i !== question.correct) {
+          btn.classList.add('incorrect');
+        }
+      });
+
+      if (index === question.correct) {
+        score++;
+      } else {
+        wrongAnswers.push({
+          question: question.q,
+          yourAnswer: question.options[index],
+          correctAnswer: question.options[question.correct],
+          topic: question.topic
+        });
+      }
+
+      document.getElementById('score-display').textContent = `Score: ${score}`;
+      document.getElementById('next-btn').classList.remove('hidden');
+      document.getElementById('next-btn').textContent = 
+        currentQuestionIndex < currentQuestions.length - 1 ? 'Next Question →' : 'See Results →';
+    }
+
+    // Next question or show results
+    function nextQuestion() {
+      if (currentQuestionIndex < currentQuestions.length - 1) {
+        currentQuestionIndex++;
+        displayQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    // Show results screen
+    function showResults() {
+      document.getElementById('quiz-screen').classList.add('hidden');
+      document.getElementById('results-screen').classList.remove('hidden');
+
+      const percentage = (score / currentQuestions.length) * 100;
+      const icon = document.getElementById('result-icon');
+      const title = document.getElementById('result-title');
+      const message = document.getElementById('result-message');
+      
+      document.getElementById('final-score').textContent = score;
+      document.getElementById('max-score').textContent = currentQuestions.length;
+
+      if (percentage >= 80) {
+        icon.innerHTML = '<svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
+        icon.className = 'inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 mb-5 bounce shadow-2xl';
+        title.textContent = 'Excellent Work!';
+        message.textContent = 'You have mastered this topic! 🎓';
+        createConfetti('confetti-container');
+      } else if (percentage >= 60) {
+        icon.innerHTML = '<svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+        icon.className = 'inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 mb-5 bounce shadow-2xl';
+        title.textContent = 'Good Effort!';
+        message.textContent = 'A little more practice will make you perfect! 💪';
+      } else {
+        icon.innerHTML = '<svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>';
+        icon.className = 'inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 mb-5 bounce shadow-2xl';
+        title.textContent = 'Keep Learning!';
+        message.textContent = 'Practice makes progress! 📚';
+      }
+
+      const practiceBtn = document.getElementById('practice-btn');
+      const finalQuizBtn = document.getElementById('final-quiz-btn');
+      const wrongSection = document.getElementById('wrong-answers-section');
+      const wrongTopics = document.getElementById('wrong-topics');
+
+      if (quizPhase === 'initial') {
+        initialScore = score;
+        if (wrongAnswers.length > 0) {
+          practiceBtn.classList.remove('hidden');
+          wrongSection.classList.remove('hidden');
+          wrongTopics.innerHTML = [...new Set(wrongAnswers.map(w => w.topic))].map(topic =>
+            `<span class="px-4 py-2 rounded-full bg-red-100 text-red-700 text-sm font-bold shadow-sm">${topic}</span>`
+          ).join('');
+        } else {
+          practiceBtn.classList.add('hidden');
+          finalQuizBtn.classList.remove('hidden');
+          wrongSection.classList.add('hidden');
+        }
+      } else if (quizPhase === 'final') {
+        finalScore = score;
+        practiceBtn.classList.add('hidden');
+        finalQuizBtn.classList.add('hidden');
+        wrongSection.classList.add('hidden');
+        
+        setTimeout(showFinalEncouragement, 2000);
+      }
+    }
+
+    // Start practice session
+    function startPractice() {
+      document.getElementById('results-screen').classList.add('hidden');
+      document.getElementById('practice-screen').classList.remove('hidden');
+
+      const content = document.getElementById('practice-content');
+      content.innerHTML = wrongAnswers.map((wa, i) => `
+        <div class="practice-item bg-white rounded-2xl border-2 border-amber-300 p-5 shadow-lg" style="animation-delay: ${i * 0.15}s">
+          <div class="flex items-start gap-4">
+            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white font-bold text-lg flex-shrink-0 shadow-md">${i + 1}</span>
+            <div class="flex-1">
+              <p class="font-bold text-gray-900 mb-3 text-lg">${wa.question}</p>
+              <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                  <span class="px-3 py-1 rounded-lg bg-red-100 text-red-700 font-semibold text-sm">Your answer</span>
+                  <span class="text-gray-700 flex-1">${wa.yourAnswer}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="px-3 py-1 rounded-lg bg-green-100 text-green-700 font-semibold text-sm">Correct</span>
+                  <span class="text-gray-900 font-semibold flex-1">${wa.correctAnswer}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Start final quiz
+    function startFinalQuiz() {
+      quizPhase = 'final';
+      studentId = generateStudentId();
+      currentQuestions = generateQuiz(currentSubject);
+      currentQuestionIndex = 0;
+      score = 0;
+      wrongAnswers = [];
+      selectedAnswer = null;
+
+      document.getElementById('results-screen').classList.add('hidden');
+      document.getElementById('practice-screen').classList.add('hidden');
+      document.getElementById('quiz-screen').classList.remove('hidden');
+
+      updateQuizBadge();
+      displayQuestion();
+    }
+
+    // Show final encouragement screen
+    function showFinalEncouragement() {
+      document.getElementById('results-screen').classList.add('hidden');
+      document.getElementById('final-screen').classList.remove('hidden');
+
+      const totalScore = initialScore + finalScore;
+      const maxTotal = currentQuestions.length * 2;
+      const percentage = Math.round((totalScore / maxTotal) * 100);
+
+      document.getElementById('total-final-score').textContent = percentage;
+      document.getElementById('quiz-score-final').textContent = initialScore;
+      document.getElementById('final-score-final').textContent = finalScore;
+
+      const achievement = document.getElementById('achievement-text');
+      if (percentage >= 90) {
+        achievement.textContent = '🏆 Quiz Master - Outstanding Performance!';
+      } else if (percentage >= 70) {
+        achievement.textContent = '⭐ Quick Learner - Great Improvement!';
+      } else if (percentage >= 50) {
+        achievement.textContent = '📖 Persistent Scholar - Never Gave Up!';
+      } else {
+        achievement.textContent = '🎯 Brave Explorer - Started the Journey!';
+      }
+
+      createConfetti('final-confetti-container');
+
+      const config = window.elementSdk?.config || defaultConfig;
+      document.getElementById('encouragement-message').textContent = config.encouragement_text || defaultConfig.encouragement_text;
+    }
+
+    // Create confetti animation
+    function createConfetti(containerId) {
+      const container = document.getElementById(containerId);
+      const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
+      
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 2 + 's';
+        confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+        container.appendChild(confetti);
+        
+        setTimeout(() => confetti.remove(), 5000);
+      }
+    }
+
+    // Go back to subject selection
+    function goBack() {
+      document.getElementById('quiz-screen').classList.add('hidden');
+      document.getElementById('subject-screen').classList.remove('hidden');
+    }
+
+    // Reset quiz
+    function resetQuiz() {
+      quizPhase = 'initial';
+      currentSubject = null;
+      currentQuestions = [];
+      currentQuestionIndex = 0;
+      score = 0;
+      wrongAnswers = [];
+      selectedAnswer = null;
+      initialScore = 0;
+      finalScore = 0;
+
+      document.getElementById('results-screen').classList.add('hidden');
+      document.getElementById('practice-screen').classList.add('hidden');
+      document.getElementById('final-screen').classList.add('hidden');
+      document.getElementById('quiz-screen').classList.add('hidden');
+      document.getElementById('subject-screen').classList.remove('hidden');
+      
+      document.getElementById('practice-btn').classList.add('hidden');
+      document.getElementById('final-quiz-btn').classList.add('hidden');
+    }
+
+    // Element SDK Integration
+    async function onConfigChange(config) {
+      document.getElementById('main-title').textContent = config.main_title || defaultConfig.main_title;
+      
+      const encouragementEl = document.getElementById('encouragement-message');
+      if (encouragementEl) {
+        encouragementEl.textContent = config.encouragement_text || defaultConfig.encouragement_text;
+      }
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [],
+        borderables: [],
+        fontEditable: undefined,
+        fontSizeable: undefined
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['main_title', config.main_title || defaultConfig.main_title],
+        ['encouragement_text', config.encouragement_text || defaultConfig.encouragement_text]
+      ]);
+    }
+
+    // Initialize SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb1ce1163043989',t:'MTc2NzkzOTM3Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
